@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Truth Check – نموذج أولي</title>
+<style>
+:root{--bg:#fff;--fg:#111;--muted:#666;--field:#111;--field-fg:#fff;--card:#f5f7f6;--line:#e2e6e4;--g1:#0b5d3b;--g2:#3ddc84;--bad:#c62828;--mid:#e09b00;--ok:#1b8a4b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#fff;--fg:#111}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:"Segoe UI",Tahoma,"Noto Naskh Arabic",Arial,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:24px 16px 48px}
+.home{min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.logo{font-size:clamp(40px,12vw,64px);font-weight:800;margin:0 0 6px;letter-spacing:-1px;direction:ltr;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);margin:0 0 28px;font-size:15px}
+.box{width:100%;position:relative}
+.box input{width:100%;background:var(--field);color:var(--field-fg);border:2px solid var(--field);border-radius:999px;padding:16px 22px;font-size:16px;font-family:inherit;outline:none}
+.box input::placeholder{color:#9a9a9a}
+.box input:focus{border-color:var(--g1);box-shadow:0 0 0 3px rgba(61,220,132,.35)}
+.btn{margin-top:16px;background:var(--field);color:var(--field-fg);border:0;border-radius:999px;padding:13px 34px;font-size:16px;font-family:inherit;cursor:pointer}
+.btn:hover{background:var(--g1)}
+.sugg{display:none;text-align:right;margin-top:18px;width:100%}
+.sugg.show{display:block}
+.sugg h3{font-size:14px;color:var(--muted);font-weight:600;margin:0 0 10px}
+.item{display:block;width:100%;text-align:right;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:9px;font-size:15px;font-family:inherit;color:var(--fg);cursor:pointer;line-height:1.6}
+.item:hover{border-color:var(--g1)}
+.tag{display:inline-block;font-size:11px;background:var(--g1);color:#fff;border-radius:6px;padding:1px 8px;margin-left:8px}
+.hidden{display:none}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.top .logo{font-size:26px;margin:0}
+.back{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-family:inherit;cursor:pointer;color:var(--fg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 12px}
+.claim{font-size:17px;line-height:1.9;margin:0}
+mark{background:#ffe08a;color:#111;border-radius:4px;padding:0 3px}
+.score{font-size:48px;font-weight:800;margin:0}
+.bar{height:12px;background:#dfe5e2;border-radius:99px;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .8s}
+.verdict{font-size:14px;color:var(--muted);margin:0}
+.why li{margin-bottom:8px;line-height:1.7}
+.src{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.7}
+.src:first-of-type{border-top:0}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:8px}
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:18px;line-height:1.7}
+.split{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px}
+.split div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;font-size:12px;color:var(--muted)}
+.split b{display:block;font-size:20px;color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="home" class="home">
+  <h1 class="logo">Truth Check</h1>
+  <p class="sub">تحقق من الخبر قبل ما تصدقه أو تنشره</p>
+  <div class="box"><input id="q" type="text" placeholder="الصق نص الخبر أو رابط المقال هنا..." autocomplete="off"></div>
+  <button class="btn" id="go">بحث</button>
+  <div class="sugg" id="sugg">
+    <h3>اختر شائعة أو جملة للتجربة:</h3>
+    <div id="list"></div>
+  </div>
+</section>
+
+<section id="result" class="hidden">
+  <div class="top"><h1 class="logo">Truth Check</h1><button class="back" id="back">← بحث جديد</button></div>
+  <div class="card"><h2>النص المُحلَّل</h2><p class="claim" id="claim"></p></div>
+  <div class="card">
+    <h2>مؤشر الموثوقية</h2>
+    <p class="score" id="score"></p>
+    <div class="bar"><i id="fill"></i></div>
+    <p class="verdict" id="verdict"></p>
+    <div class="split" id="split"></div>
+  </div>
+  <div class="card"><h2>مواضع التلاعب (عبارات تستحق التحقق)</h2><ul class="why" id="why"></ul></div>
+  <div class="card"><h2>المصادر</h2><div id="srcs"></div></div>
+  <p class="note">⚠️ نموذج أولي: النتائج هنا تجريبية لعرض فكرة الواجهة، وليست ناتجة عن نموذج ذكاء اصطناعي حقيقي بعد.</p>
+</section>
+
+</div>
+<script>
+const DATA=[
+ {t:"شرب الماء المغلي مع الليمون يشفي من السكري نهائياً",k:"طبية",score:8,
+  style:42,claims:6,source:5,
+  marks:["يشفي من السكري نهائياً"],
+  why:["ادعاء طبي مطلق ('نهائياً') بدون أي دراسة أو جهة صحية تدعمه.","السكري مرض مزمن يُضبط ولا يُشفى بمشروب منزلي حسب الجهات الصحية."],
+  src:[["bad","منظمة الصحة العالمية: لا يوجد علاج منزلي يشفي السكري (مثال توضيحي)"],["bad","منصات التحقق العربية: تصنّف هذا النوع من الادعاءات كمضلل (مثال توضيحي)"]]},
+ {t:"عاجل: تعليق الدراسة في جميع المدارس لمدة شهر، شارك قبل ما يحذفونه",k:"عاجل",score:14,
+  style:15,claims:20,source:8,
+  marks:["عاجل","شارك قبل ما يحذفونه","جميع المدارس لمدة شهر"],
+  why:["عبارة 'شارك قبل ما يحذفونه' أسلوب ضغط شائع في الشائعات.","قرار بهذا الحجم لازم يصدر عن وزارة التعليم، ولا يوجد مصدر رسمي مذكور.","النص ما ذكر رقم قرار أو تاريخ أو جهة."],
+  src:[["bad","لا يوجد في حساب الوزارة الرسمي ما يؤكد الخبر (مثال توضيحي)"],["mid","يُنصح بالرجوع للحساب الرسمي للوزارة قبل المشاركة"]]},
+ {t:"الإنسان يستخدم 10% فقط من دماغه",k:"خرافة علمية",score:12,
+  style:60,claims:18,source:10,
+  marks:["10% فقط من دماغه"],
+  why:["خرافة منتشرة؛ تصوير الدماغ يظهر نشاطاً في كل مناطقه على مدار اليوم.","الرقم المحدد (10%) بدون مصدر علامة تستحق الشك."],
+  src:[["bad","مراجع علم الأعصاب تنفي الادعاء (مثال توضيحي)"],["bad","موسوعات علمية عامة تذكره كخرافة (مثال توضيحي)"]]},
+ {t:"ناسا تعلن أن الشمس ستشرق من الغرب يوم الجمعة القادمة",k:"غير منطقي",score:2,
+  style:70,claims:2,source:3,
+  marks:["الشمس ستشرق من الغرب","ناسا تعلن"],
+  why:["يخالف حركة دوران الأرض: الشروق من الشرق دائماً.","نسبة الخبر لجهة معروفة (ناسا) بدون رابط أو بيان رسمي."],
+  src:[["bad","لا يوجد أي بيان من ناسا بهذا المعنى (مثال توضيحي)"]]},
+ {t:"أكثر من 5 مليون زائر لمعرض الكتاب هذا العام حسب الجهة المنظمة",k:"يحتاج تحقق",score:61,
+  style:75,claims:55,source:60,
+  marks:["أكثر من 5 مليون زائر"],
+  why:["رقم كبير يستحق المقارنة مع البيان الرسمي للجهة المنظمة.","النص نسب الرقم لجهة، وهذا يرفع الموثوقية لكن لم نجد نسخة رسمية للمقارنة."],
+  src:[["mid","وكالة أنباء تناولت الخبر بصياغة مشابهة (مثال توضيحي)"],["mid","لم نجد بيان الجهة المنظمة بالرقم نفسه: ما لقينا ما يؤكده، وهذا لا يعني أنه مزيف"]]}
+];
+const $=id=>document.getElementById(id);
+const list=$("list");
+DATA.forEach((d,i)=>{const b=document.createElement("button");b.className="item";b.innerHTML=`<span class="tag">${d.k}</span>${d.t}`;b.onclick=()=>show(d);list.appendChild(b)});
+function openSugg(){$("sugg").classList.add("show")}
+$("go").onclick=()=>{
+  const v=$("q").value.trim();
+  const hit=v&&DATA.find(d=>d.t.includes(v)||v.includes(d.t.slice(0,12)));
+  if(hit)show(hit);else openSugg();
+};
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
+$("q").addEventListener("focus",openSugg);
+$("back").onclick=()=>{$("result").classList.add("hidden");$("home").classList.remove("hidden");$("q").value="";window.scrollTo(0,0)};
+function show(d){
+  let t=d.t;d.marks.forEach(m=>{t=t.replace(m,`<mark>${m}</mark>`)});
+  $("claim").innerHTML=t;
+  const c=d.score<35?"var(--bad)":d.score<70?"var(--mid)":"var(--ok)";
+  $("score").textContent=d.score+"%";$("score").style.color=c;
+  $("fill").style.background=c;$("fill").style.width="0";
+  setTimeout(()=>$("fill").style.width=d.score+"%",50);
+  $("verdict").textContent=d.score<35?"موثوقية منخفضة: الأدلة تميل إلى أن الخبر مضلل.":d.score<70?"موثوقية متوسطة: الخبر يحتاج تحققاً إضافياً قبل المشاركة.":"موثوقية جيدة: يوجد ما يدعمه.";
+  $("split").innerHTML=`<div><b>${d.style}%</b>أسلوب الكتابة</div><div><b>${d.claims}%</b>دعم الادعاءات</div><div><b>${d.source}%</b>المصدر</div>`;
+  $("why").innerHTML=d.why.map(w=>`<li>${w}</li>`).join("");
+  $("srcs").innerHTML=d.src.map(s=>`<div class="src"><span class="dot" style="background:var(--${s[0]==='bad'?'bad':s[0]==='mid'?'mid':'ok'})"></span><span>${s[1]}</span></div>`).join("");
+  $("home").classList.add("hidden");$("result").classList.remove("hidden");window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
